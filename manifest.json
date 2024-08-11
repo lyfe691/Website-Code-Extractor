@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Code Extractor",
+  "version": "1.0",
+  "permissions": [
+    "activeTab",
+    "downloads",
+    "scripting"
+  ],
+
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
