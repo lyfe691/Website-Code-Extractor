@@ -1,14 +1,42 @@
 {
   "manifest_version": 3,
-  "name": "Code Extractor",
-  "version": "1.0",
+  "name": "Website Code Extractor",
+  "version": "1.1",
+  "description": "A Chrome extension that extracts website code (HTML, CSS, JS, images) and packages it into a ZIP file.",
   "permissions": [
     "activeTab",
     "downloads",
-    "scripting"
+    "scripting",
+    "storage"
   ],
-
+  "icons": {
+    "16": "icons/icon16.jpg",
+    "48": "icons/icon48.jpg",
+    "128": "icons/icon128.jpg"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
-    "default_popup": "popup.html"
-  }
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.jpg",
+      "48": "icons/icon48.jpg",
+      "128": "icons/icon128.jpg"
+    }
+  },
+
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/icon48.jpg",
+        "icons/icon128.jpg"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

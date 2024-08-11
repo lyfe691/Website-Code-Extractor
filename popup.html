@@ -69,13 +69,23 @@
         button:focus:not(:active)::after {
             animation: ripple 1s ease-out;
         }
+        a {
+            color: #6a5acd;
+            text-decoration: none;
+            margin-top: 20px;
+        }
+        a:hover {
+            color: #483d8b;
+        }
     </style>
 </head>
 <body>
     <h3>Code Extractor</h3>
     <button id="extractCode">Extract and Save</button>
+    <a href="https://yanissebastianzuercher.ch#contact" id="openOptions" target="_blank">Contact</a>
 
     <script src="dist/jszip.min.js"></script>
     <script src="popup.js"></script>
+    
 </body>
 </html>
