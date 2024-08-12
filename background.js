@@ -16,7 +16,6 @@ chrome.action.onClicked.addListener((tab) => {
     });
 });
 
-// Example of using storage API for options
 chrome.storage.sync.get(['zipFilename', 'compressionLevel'], (items) => {
     console.log('Stored options:', items);
 });

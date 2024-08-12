@@ -1,49 +1,67 @@
 document.getElementById('extractCode').addEventListener('click', async () => {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const loadingMessage = document.getElementById('loadingMessage');
+    const errorMessage = document.getElementById('errorMessage');
 
-    // Extract the website name (hostname) from the URL
-    const websiteName = new URL(tab.url).hostname;
+    loadingMessage.style.display = 'block';
+    errorMessage.style.display = 'none';
 
-    // Execute script to get the HTML content of the page
-    chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        function: extractPageContent
-    }, async (results) => {
-        if (results && results[0] && results[0].result) {
-            const htmlContent = results[0].result;
-            const doc = new DOMParser().parseFromString(htmlContent, 'text/html');
-            const baseUrl = new URL(tab.url);
-            const resources = resolveResourceLinks(doc, baseUrl);
+    try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-            const zip = new JSZip();
-            const folder = zip.folder(websiteName);
+        // Extract the website name (hostname) from the URL
+        const websiteName = new URL(tab.url).hostname;
 
-            // Add the html to the zip file
-            folder.file("index.html", new XMLSerializer().serializeToString(doc));
+        // Execute script to get the HTML content of the page
+        chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            function: extractPageContent
+        }, async (results) => {
+            if (results && results[0] && results[0].result) {
+                const htmlContent = results[0].result;
+                const doc = new DOMParser().parseFromString(htmlContent, 'text/html');
+                const baseUrl = new URL(tab.url);
+                const resources = resolveResourceLinks(doc, baseUrl);
 
-            // Fetch n add resource
-            await Promise.all(resources.map(async resource => {
-                try {
-                    const response = await fetch(resource.url);
-                    const data = await response.blob();
-                    folder.file(resource.path, data);
-                } catch (error) {
-                    console.error(`Failed to fetch resource: ${resource.url}`, error);
-                }
-            }));
+                const zip = new JSZip();
+                const folder = zip.folder(websiteName);
 
-            // Generate the zip file and trigger download
-            zip.generateAsync({ type: "blob" }).then(function(content) {
-                chrome.downloads.download({
-                    url: URL.createObjectURL(content),
-                    filename: `${websiteName}.zip`,
-                    saveAs: true
+                // Add the html to the zip file
+                folder.file("index.html", new XMLSerializer().serializeToString(doc));
+
+                // Fetch n add resources
+                await Promise.all(resources.map(async resource => {
+                    try {
+                        const response = await fetch(resource.url);
+                        const data = await response.blob();
+                        folder.file(resource.path, data);
+                    } catch (error) {
+                        console.error(`Failed to fetch resource: ${resource.url}`, error);
+                    }
+                }));
+
+                // Generate the zip file and trigger download
+                zip.generateAsync({ type: "blob" }).then(function(content) {
+                    chrome.downloads.download({
+                        url: URL.createObjectURL(content),
+                        filename: `${websiteName}.zip`,
+                        saveAs: true
+                    });
+
+                    loadingMessage.style.display = 'none';
+                }).catch(error => {
+                    console.error("Failed to generate zip file:", error);
+                    loadingMessage.style.display = 'none';
+                    errorMessage.style.display = 'block';
                 });
-            }).catch(error => {
-                console.error("Failed to generate zip file:", error);
-            });
-        }
-    });
+            } else {
+                throw new Error("Failed to extract page content.");
+            }
+        });
+    } catch (error) {
+        console.error("An error occurred:", error);
+        loadingMessage.style.display = 'none';
+        errorMessage.style.display = 'block';
+    }
 });
 
 function extractPageContent() {
@@ -68,8 +86,6 @@ function resolveResourceLinks(doc, baseUrl) {
             path = path.replace(/\//g, '/');
 
             resources.push({ url, path });
-
-           
             element.setAttribute(attr, path);
         }
     });

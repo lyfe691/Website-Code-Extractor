@@ -69,6 +69,17 @@
         button:focus:not(:active)::after {
             animation: ripple 1s ease-out;
         }
+        .loading,
+        .error-message {
+            margin-top: 20px;
+            display: none;
+        }
+        .loading {
+            color: #6a5acd;
+        }
+        .error-message {
+            color: #ff6b6b;
+        }
         a {
             color: #6a5acd;
             text-decoration: none;
@@ -77,15 +88,26 @@
         a:hover {
             color: #483d8b;
         }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #a0a0a0;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <h3>Code Extractor</h3>
     <button id="extractCode">Extract and Save</button>
+    <div class="loading" id="loadingMessage">Loading, please wait...</div>
+    <div class="error-message" id="errorMessage">An error occurred. Please try again.</div>
     <a href="https://yanissebastianzuercher.ch#contact" id="openOptions" target="_blank">Contact</a>
+    <div class="footer">
+        &copy; 2024 Yanis Sebastian Zürcher
+    </div>
 
+    <!--https://github.com/Stuk/jszip/releases/tag/v3.10.1-->
     <script src="dist/jszip.min.js"></script>
     <script src="popup.js"></script>
-    
 </body>
 </html>
