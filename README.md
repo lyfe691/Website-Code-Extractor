@@ -1,3 +1,1 @@
-## How-To-Use
-Just simply donwload the source code and extract the Zip file.
-After you've done that go to google extensions and click add package and select the extracted file
+<a href="https://chromewebstore.google.com/detail/website-code-extractor/foppgeakfpkdghmmmflmblcidoofpohm">Visit here</a>
