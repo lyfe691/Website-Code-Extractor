@@ -1,3 +1,6 @@
+// Author: Yanis Sebastian Zürcher
+// https://ysz.life
+
 document.getElementById('extractCode').addEventListener('click', async () => {
     const loadingMessage = document.getElementById('loadingMessage');
     const errorMessage = document.getElementById('errorMessage');
@@ -8,10 +11,10 @@ document.getElementById('extractCode').addEventListener('click', async () => {
     try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-        // Extract the website name (hostname) from the URL
+        // extract the website name from the URL
         const websiteName = new URL(tab.url).hostname;
 
-        // Execute script to get the HTML content of the page
+        // execute script to get the html content of the page
         chrome.scripting.executeScript({
             target: { tabId: tab.id },
             function: extractPageContent
@@ -25,10 +28,10 @@ document.getElementById('extractCode').addEventListener('click', async () => {
                 const zip = new JSZip();
                 const folder = zip.folder(websiteName);
 
-                // Add the html to the zip file
+                // add the html to the zip file
                 folder.file("index.html", new XMLSerializer().serializeToString(doc));
 
-                // Fetch n add resources
+                // fetch n add resources
                 await Promise.all(resources.map(async resource => {
                     try {
                         const response = await fetch(resource.url);
@@ -39,7 +42,7 @@ document.getElementById('extractCode').addEventListener('click', async () => {
                     }
                 }));
 
-                // Generate the zip file and trigger download
+                // generate the zip file and trigger download
                 zip.generateAsync({ type: "blob" }).then(function(content) {
                     chrome.downloads.download({
                         url: URL.createObjectURL(content),
