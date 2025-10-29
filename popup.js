@@ -20,7 +20,7 @@ document.getElementById('extractCode').addEventListener('click', async () => {
             function: extractPageContent
         }, async (results) => {
             if (results && results[0] && results[0].result) {
-                const htmlContent = results[0].result;
+                const { html: htmlContent, doctype } = results[0].result;
                 const doc = new DOMParser().parseFromString(htmlContent, 'text/html');
                 const baseUrl = new URL(tab.url);
                 const resources = resolveResourceLinks(doc, baseUrl);
@@ -68,7 +68,14 @@ document.getElementById('extractCode').addEventListener('click', async () => {
 });
 
 function extractPageContent() {
-    return document.documentElement.outerHTML;
+    const doctype = document.doctype
+    ? new XMLSerializer().serializeToString(document.doctype)
+    : null;
+
+    return {
+        html: document.documentElement.outerHTML,
+        doctype,
+    };
 }
 
 function resolveResourceLinks(doc, baseUrl) {
@@ -76,7 +83,14 @@ function resolveResourceLinks(doc, baseUrl) {
     const elements = doc.querySelectorAll('link[href], script[src], img[src]');
 
     elements.forEach(element => {
-        const attr = element.tagName === 'LINK' || element.tagName === 'IMG' ? 'href' : 'src';
+        let attr;
+        if (element.tagName === 'LINK') {
+            attr = 'href';
+        } else if (element.tagName === 'IMG' || element.tagName === 'SCRIPT') {
+            attr = 'src';
+        } else {
+            attr = element.hasAttribute('src') ? 'src' : 'href';
+        }
         let url = element.getAttribute(attr);
         if (url) {
             if (!url.startsWith('http')) {
