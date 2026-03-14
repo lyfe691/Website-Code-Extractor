@@ -101,9 +101,14 @@
             background: linear-gradient(180deg, #eeeeF2, #e2e2e8);
         }
 
-        button:active {
+        button:active:not(:disabled) {
             box-shadow: 0 1px 0 #9a9aa4, 0 1px 3px rgba(0, 0, 0, 0.2);
             transform: translateY(2px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: default;
         }
 
         /* ── status messages ── */
@@ -114,16 +119,6 @@
             display: none;
             padding: 0 4px;
             letter-spacing: 0.2px;
-        }
-
-        .loading {
-            color: #8888a0;
-            animation: pulse 1.8s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
         }
 
         .error-message {
@@ -164,7 +159,6 @@
         </div>
         <div class="divider"></div>
         <button id="extractCode">Extract & Download</button>
-        <div class="status loading" id="loadingMessage">Extracting, please wait...</div>
         <div class="status error-message" id="errorMessage">An error occurred. Please try again.</div>
     </div>
     <div class="footer">

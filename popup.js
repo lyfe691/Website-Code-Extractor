@@ -4,10 +4,12 @@
 document.getElementById('year').textContent = new Date().getFullYear();
 
 document.getElementById('extractCode').addEventListener('click', async () => {
-    const loadingMessage = document.getElementById('loadingMessage');
+    const button = document.getElementById('extractCode');
     const errorMessage = document.getElementById('errorMessage');
 
-    loadingMessage.style.display = 'block';
+    if (button.disabled) return;
+    button.disabled = true;
+    button.textContent = 'Extracting...';
     errorMessage.style.display = 'none';
 
     try {
@@ -62,14 +64,17 @@ document.getElementById('extractCode').addEventListener('click', async () => {
             });
             URL.revokeObjectURL(blobUrl);
 
-            loadingMessage.style.display = 'none';
+            button.textContent = 'Extract & Download';
+            button.disabled = false;
         } else {
             throw new Error("Failed to extract page content.");
         }
     } catch (error) {
         console.error("An error occurred:", error);
-        loadingMessage.style.display = 'none';
         errorMessage.style.display = 'block';
+    } finally {
+        button.textContent = 'Extract & Download';
+        button.disabled = false;
     }
 });
 
