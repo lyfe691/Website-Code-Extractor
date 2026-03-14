@@ -1,6 +1,8 @@
 // Author: Yanis Sebastian Zürcher
 // https://ysz.life
 
+document.getElementById('year').textContent = new Date().getFullYear();
+
 document.getElementById('extractCode').addEventListener('click', async () => {
     const loadingMessage = document.getElementById('loadingMessage');
     const errorMessage = document.getElementById('errorMessage');
