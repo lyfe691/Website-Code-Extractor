@@ -11,55 +11,59 @@ document.getElementById('extractCode').addEventListener('click', async () => {
     try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
+        // block privileged pages that can't be scripted
+        if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('edge://') || tab.url.startsWith('about:')) {
+            throw new Error("Cannot extract code from this page.");
+        }
+
         // extract the website name from the URL
         const websiteName = new URL(tab.url).hostname;
 
         // execute script to get the html content of the page
-        chrome.scripting.executeScript({
+        const results = await chrome.scripting.executeScript({
             target: { tabId: tab.id },
             function: extractPageContent
-        }, async (results) => {
-            if (results && results[0] && results[0].result) {
-                const { html: htmlContent, doctype } = results[0].result;
-                const doc = new DOMParser().parseFromString(htmlContent, 'text/html');
-                const baseUrl = new URL(tab.url);
-                const resources = resolveResourceLinks(doc, baseUrl);
-
-                const zip = new JSZip();
-                const folder = zip.folder(websiteName);
-
-                // add the html to the zip file
-                folder.file("index.html", new XMLSerializer().serializeToString(doc));
-
-                // fetch n add resources
-                await Promise.all(resources.map(async resource => {
-                    try {
-                        const response = await fetch(resource.url);
-                        const data = await response.blob();
-                        folder.file(resource.path, data);
-                    } catch (error) {
-                        console.error(`Failed to fetch resource: ${resource.url}`, error);
-                    }
-                }));
-
-                // generate the zip file and trigger download
-                zip.generateAsync({ type: "blob" }).then(function(content) {
-                    chrome.downloads.download({
-                        url: URL.createObjectURL(content),
-                        filename: `${websiteName}.zip`,
-                        saveAs: true
-                    });
-
-                    loadingMessage.style.display = 'none';
-                }).catch(error => {
-                    console.error("Failed to generate zip file:", error);
-                    loadingMessage.style.display = 'none';
-                    errorMessage.style.display = 'block';
-                });
-            } else {
-                throw new Error("Failed to extract page content.");
-            }
         });
+
+        if (results && results[0] && results[0].result) {
+            const { html: htmlContent, doctype } = results[0].result;
+            const doc = new DOMParser().parseFromString(htmlContent, 'text/html');
+            const baseUrl = new URL(tab.url);
+            const resources = resolveResourceLinks(doc, baseUrl);
+
+            const zip = new JSZip();
+            const folder = zip.folder(websiteName);
+
+            // add the html to the zip file, with doctype prepended
+            const serializedHtml = new XMLSerializer().serializeToString(doc);
+            const fullHtml = doctype ? doctype + '\n' + serializedHtml : serializedHtml;
+            folder.file("index.html", fullHtml);
+
+            // fetch and add resources
+            await Promise.all(resources.map(async resource => {
+                try {
+                    const response = await fetch(resource.url);
+                    const data = await response.blob();
+                    folder.file(resource.path, data);
+                } catch (error) {
+                    console.error(`Failed to fetch resource: ${resource.url}`, error);
+                }
+            }));
+
+            // generate the zip file and trigger download
+            const content = await zip.generateAsync({ type: "blob" });
+            const blobUrl = URL.createObjectURL(content);
+            await chrome.downloads.download({
+                url: blobUrl,
+                filename: `${websiteName}.zip`,
+                saveAs: true
+            });
+            URL.revokeObjectURL(blobUrl);
+
+            loadingMessage.style.display = 'none';
+        } else {
+            throw new Error("Failed to extract page content.");
+        }
     } catch (error) {
         console.error("An error occurred:", error);
         loadingMessage.style.display = 'none';
@@ -99,8 +103,8 @@ function resolveResourceLinks(doc, baseUrl) {
             const urlObject = new URL(url);
             let path = urlObject.hostname + urlObject.pathname;
 
-            path = path.startsWith('/') ? path.substr(1) : path;
-            path = path.replace(/\//g, '/');
+            path = path.startsWith('/') ? path.slice(1) : path;
+            path = path.replace(/\/\//g, '/');
 
             resources.push({ url, path });
             element.setAttribute(attr, path);
