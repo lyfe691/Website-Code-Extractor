@@ -39,7 +39,7 @@ document.getElementById('extractCode').addEventListener('click', async () => {
             const folder = zip.folder(websiteName);
 
             // add the html to the zip file, with doctype prepended
-            const serializedHtml = new XMLSerializer().serializeToString(doc);
+            const serializedHtml = doc.documentElement.outerHTML;
             const fullHtml = doctype ? doctype + '\n' + serializedHtml : serializedHtml;
             folder.file("index.html", fullHtml);
 
