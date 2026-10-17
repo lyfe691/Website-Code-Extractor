@@ -21,7 +21,7 @@ document.getElementById('extractCode').addEventListener('click', async () => {
         }
 
         // extract the website name from the URL
-        const websiteName = new URL(tab.url).hostname;
+        const websiteName = toFolderName(new URL(tab.url).hostname);
 
         // execute script to get the html content of the page
         const results = await chrome.scripting.executeScript({
@@ -89,6 +89,11 @@ function extractPageContent() {
     };
 }
 
+// macOS Finder shows folders ending in .app (vercel.app, web.app, ...) as applications and hides their contents
+function toFolderName(hostname) {
+    return hostname.replace(/\./g, '-');
+}
+
 function resolveResourceLinks(doc, baseUrl) {
     const resources = [];
     const elements = doc.querySelectorAll('link[href], script[src], img[src]');
@@ -108,7 +113,7 @@ function resolveResourceLinks(doc, baseUrl) {
                 url = new URL(url, baseUrl).href;
             }
             const urlObject = new URL(url);
-            let path = urlObject.hostname + urlObject.pathname;
+            let path = toFolderName(urlObject.hostname) + urlObject.pathname;
 
             path = path.startsWith('/') ? path.slice(1) : path;
             path = path.replace(/\/\//g, '/');
